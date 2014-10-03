@@ -6,6 +6,8 @@ deps
 erl_crash.dump
 ebin
 rel/autodeploy
-_rel/autodeploy
+_rel/
 .concrete/DEV_MODE
 .rebar
+secret
+.erlang.mk*
