@@ -11,3 +11,5 @@ _rel/
 .rebar
 secret
 .erlang.mk*
+*.log
+tags

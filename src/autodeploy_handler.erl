@@ -8,10 +8,11 @@
 -record(state, {
 }).
 
-init(_, Req, _Opts) ->
+init({tcp, http}, Req, _Opts) ->
 	{ok, Req, #state{}}.
 
 handle(Req, State=#state{}) ->
+    lager:debug("request method: ~p", [cowboy_req:method(Req)]),
     {ok, Req2} = cowboy_req:reply(200,
         [{<<"content-type">>, <<"text/plain">>}],
         <<"Hello From Autodeploy!">>,

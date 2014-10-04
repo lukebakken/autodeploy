@@ -6,7 +6,8 @@
 	{applications, [
 		kernel,
 		stdlib,
-        cowboy
+        cowboy,
+        lager
 	]},
 	{mod, {autodeploy_app, []}},
 	{env, []}
