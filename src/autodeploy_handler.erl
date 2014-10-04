@@ -12,7 +12,13 @@ init({tcp, http}, Req, _Opts) ->
 	{ok, Req, #state{}}.
 
 handle(Req, State=#state{}) ->
-    lager:debug("request method: ~p", [cowboy_req:method(Req)]),
+    do_handle(cowboy_req:method(Req), State).
+
+do_handle({<<"POST">>, Req}, State) ->
+    lager:debug("POST request: ~p", [Req]),
+    {ok, Req2} = cowboy_req:reply(204, Req),
+    {ok, Req2, State};
+do_handle({_, Req}, State) ->
     {ok, Req2} = cowboy_req:reply(200,
         [{<<"content-type">>, <<"text/plain">>}],
         <<"Hello From Autodeploy!">>,
