@@ -3,12 +3,14 @@
 	{vsn, "0.1.0"},
 	{modules, []},
 	{registered, []},
+	{included_applications, [
+        exec
+    ]},
 	{applications, [
 		kernel,
 		stdlib,
         cowboy,
-        lager,
-        exec
+        lager
 	]},
 	{mod, {autodeploy_app, []}},
 	{env, []}
