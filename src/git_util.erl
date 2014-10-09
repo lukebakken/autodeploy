@@ -1,6 +1,6 @@
 -module(git_util).
 
--export([pull/1]).
+-export([pull/2]).
 
 %% as bashodeploy user:
 %% cd /home/zdsms/zendesk-sms
@@ -9,10 +9,13 @@
 %% git reset --hard FETCH_HEAD
 %% git clean -fxd
 
-pull(GitRepoPath) ->
+pull(GitRepoPath, GitRepoUser) ->
     {ok, TmpFile} = get_tmp_file(),
     ok = build_script(TmpFile, GitRepoPath),
-    {ok, RunResult} = exec:run(["/bin/sh", "-c", TmpFile], [sync, stdout]),
+    % TODO: add -x when debug/test
+    % TODO: how best to globally indicate debug vs production
+    {ok, RunResult} = exec:run(["/bin/sh", TmpFile], [sync, stdout, {user, GitRepoUser}]),
+    lager:debug("git result: ~p", [RunResult]),
     ok = file:delete(TmpFile).
 
 get_tmp_file() ->
@@ -26,6 +29,7 @@ build_script(TmpFile, GitRepoPath) ->
     {ok, F} = file:open(TmpFile, [write]),
     ok = file:write(F, "#!/bin/sh\n"),
     ok = file:write(F, "set -o errexit\n"),
+    ok = file:write(F, "whoami\n"),
     ok = io:format(F, "cd ~s~n", [GitRepoPath]),
     ok = io:format(F, "~s checkout master~n", [GitPath]),
     ok = io:format(F, "~s fetch basho~n", [GitPath]),
