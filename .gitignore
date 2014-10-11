@@ -13,3 +13,4 @@ secret
 .erlang.mk*
 *.log
 tags
+*.json
