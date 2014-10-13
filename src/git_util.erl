@@ -16,7 +16,8 @@ pull(GitRepoPath, GitRepoUser) ->
     % TODO: how best to globally indicate debug vs production
     {ok, RunResult} = exec:run(["/bin/sh", TmpFile], [sync, stdout, {user, GitRepoUser}]),
     lager:debug("git result: ~p", [RunResult]),
-    ok = file:delete(TmpFile).
+    ok = file:delete(TmpFile),
+    {ok, RunResult}.
 
 get_tmp_file() ->
     {ok, TmpDir} = application:get_env(autodeploy, tmp_dir),
