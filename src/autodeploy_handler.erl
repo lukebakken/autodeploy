@@ -20,7 +20,8 @@ do_handle({<<"POST">>, Req}, State) ->
         true ->
             {ok, Body, Req2} = cowboy_req:body(Req),
             {RepoName, RepoFullName} = process_postreq_body(Body),
-            lager:debug("RepoName: ~p, RepoFullName: ~p", [RepoName, RepoFullName]),
+            lager:debug("autodeploy_handler|RepoName: ~p, RepoFullName: ~p",
+                        [RepoName, RepoFullName]),
             deploy_mgr:deploy_async(RepoName, RepoFullName),
             {ok, ReqRsp} = cowboy_req:reply(204, Req2);
         false ->
@@ -40,6 +41,6 @@ terminate(_Reason, _Req, _State) ->
 process_postreq_body(Body) ->
     {struct, JsonData} = mochijson2:decode(Body),
     {struct, RepoData} = proplists:get_value(<<"repository">>, JsonData),
-    RepoName = proplists:get_value(<<"name">>, RepoData),
-    RepoFullName = proplists:get_value(<<"full_name">>, RepoData),
+    RepoName = binary_to_list(proplists:get_value(<<"name">>, RepoData)),
+    RepoFullName = binary_to_list(proplists:get_value(<<"full_name">>, RepoData)),
     {RepoName, RepoFullName}.

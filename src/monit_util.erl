@@ -2,15 +2,15 @@
 
 -export([service_action/2]).
 
-service_action(ServiceName, start) ->
+service_action(start, ServiceName) ->
     do_service_action(ServiceName, "start");
-service_action(ServiceName, stop) ->
+service_action(stop, ServiceName) ->
     do_service_action(ServiceName, "stop");
-service_action(ServiceName, restart) ->
+service_action(restart, ServiceName) ->
     do_service_action(ServiceName, "restart").
 
 do_service_action(ServiceName, Action) ->
-    {MonitUrl, MonitUser, MonitPass} = get_monit_conf(),
+    {MonitUrl, MonitUser, MonitPass} = config_util:monit_config(),
     BasicAuthToken = base64:encode_to_string(string:join([MonitUser, MonitPass], ":")),
     BasicAuthHeader = string:concat("Basic ", BasicAuthToken),
     Method = post,
@@ -22,13 +22,4 @@ do_service_action(ServiceName, Action) ->
     Body = string:concat("action=", Action),
     HTTPOptions = [],
     Options = [],
-    {ok, R} = httpc:request(Method, {URL, Header, Type, Body}, HTTPOptions, Options),
-    lager:debug("monit http response: ~p", [R]),
-    ok.
-
-get_monit_conf() ->
-    {ok, MonitConf} = application:get_env(autodeploy, monit),
-    MonitUrl = proplists:get_value(url, MonitConf),
-    MonitUser = proplists:get_value(user, MonitConf),
-    MonitPass = proplists:get_value(pass, MonitConf),
-    {MonitUrl, MonitUser, MonitPass}.
+    {ok, _R} = httpc:request(Method, {URL, Header, Type, Body}, HTTPOptions, Options).

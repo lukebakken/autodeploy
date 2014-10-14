@@ -8,5 +8,8 @@ start_link() ->
 	supervisor:start_link({local, ?MODULE}, ?MODULE, []).
 
 init([]) ->
-	Procs = [],
+	Procs = [
+        {deploy_mgr, {deploy_mgr, start_link, []},
+            permanent, 5, worker, [deploy_mgr]}
+    ],
 	{ok, {{one_for_one, 1, 5}, Procs}}.

@@ -23,9 +23,7 @@ deploy_async(RepoName, RepoFullName) ->
     gen_server:cast(?MODULE, {deploy, RepoName, RepoFullName}).
 
 init([]) ->
-    % TODO: What State if any?
-    % State = [],
-    % {ok, State}.
+    lager:debug("deploy_mgr initialized", []),
     {ok, initialized}.
 
 handle_call({deploy, RepoName, RepoFullName}, _From, State) ->
@@ -46,6 +44,12 @@ do_deploy(RepoName, RepoFullName) ->
     % Process:
     % Update git
     % if ok, restart monit
-    {ok, GitRepoPath, GitRepoUser, _MonitName} =
-        config_util:config_for(RepoName, RepoFullName),
-    {ok, _RunResult} = git_util:pull(GitRepoPath, GitRepoUser).
+    {ok, GitRepoPath, GitRepoUser, MonitName} =
+        config_util:git_config(RepoName, RepoFullName),
+    lager:debug("git repo: ~p, user: ~p, monit name: ~p",
+                [GitRepoPath, GitRepoUser, MonitName]),
+    {ok, GitResult} = git_util:pull(GitRepoPath, GitRepoUser),
+    lager:debug("git result: ~p", [GitResult]),
+    {ok, MonitResult} = monit_util:service_action(restart, MonitName),
+    lager:debug("monit result: ~p", [MonitResult]),
+    {ok, [{git, GitResult}, {monit, MonitResult}]}.
