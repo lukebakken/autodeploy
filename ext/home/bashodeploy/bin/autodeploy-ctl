@@ -1,0 +1,40 @@
+#!/usr/bin/env bash
+
+if [[ $(whoami) != 'bashodeploy' ]]
+then
+  echo "[error] must be started as bashodeploy user $(id)" 1>&2
+  exit 1
+fi
+
+export HOME=/home/bashodeploy
+export AUTODEPLOY=/home/bashodeploy/autodeploy
+
+cd $HOME || {
+  echo "could not cd to $HOME" 1>&2
+  exit 1
+}
+
+PIDFILE=/var/run/autodeploy/autodeploy.pid
+LOGFILE=/var/log/autodeploy/autodeploy.log
+
+case $1 in
+  start)
+    cd $AUTODEPLOY
+    ./bin/autodeploy_release foreground > $LOGFILE 2>&1 &
+    echo $! > $PIDFILE
+    exit 0
+    ;;
+
+  stop)
+    cd $AUTODEPLOY
+    ./bin/autodeploy_release stop > $LOGFILE 2>&1
+    rm -f $PIDFILE
+    exit 0
+    ;;
+
+  *)
+    echo "Usage: autodeploy-ctl {start|stop}"
+    exit 1
+    ;;
+esac
+

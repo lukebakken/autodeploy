@@ -2,7 +2,7 @@
 -behavior(gen_server).
 
 % client API
--export([start_link/0, stop/0, deploy/2, deploy_async/2]).
+-export([start_link/0, stop/0, deploy/1, deploy_async/1]).
 
 % gen_server API
 -export([init/1, handle_call/3, handle_cast/2,
@@ -16,31 +16,31 @@ start_link() ->
 stop() ->
     gen_server:call(?MODULE, stop).
 
-deploy(RepoName, RepoFullName) ->
-    gen_server:call(?MODULE, {deploy, RepoName, RepoFullName}).
+deploy(RepoData) ->
+    gen_server:call(?MODULE, {deploy, RepoData}).
 
-deploy_async(RepoName, RepoFullName) ->
-    gen_server:cast(?MODULE, {deploy, RepoName, RepoFullName}).
+deploy_async(RepoData) ->
+    gen_server:cast(?MODULE, {deploy, RepoData}).
 
 init([]) ->
     lager:debug("deploy_mgr initialized", []),
     {ok, initialized}.
 
-handle_call({deploy, RepoName, RepoFullName}, _From, State) ->
-    {ok, Reply} = do_deploy(RepoName, RepoFullName),
+handle_call({deploy, RepoData}, _From, State) ->
+    {ok, Reply} = do_deploy(RepoData),
     {reply, Reply, State};
 handle_call(stop, _From, State) ->
     {stop, normal, stopped, State}.
 
-handle_cast({deploy, RepoName, RepoFullName}, State) ->
-    {ok, _Reply} = do_deploy(RepoName, RepoFullName),
+handle_cast({deploy, RepoData}, State) ->
+    {ok, _Reply} = do_deploy(RepoData),
     {noreply, State}.
 
 handle_info(_Info, State) -> {noreply, State}.
 terminate(_Reason, _State) -> ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
-do_deploy(RepoName, RepoFullName) ->
+do_deploy({RepoName, RepoFullName, RepoCloneUrl}) ->
     % Process:
     % Update git
     % if ok, restart monit
@@ -48,7 +48,7 @@ do_deploy(RepoName, RepoFullName) ->
         config_util:git_config(RepoName, RepoFullName),
     lager:debug("git repo: ~p, user: ~p, monit name: ~p",
                 [GitRepoPath, GitRepoUser, MonitName]),
-    {ok, GitResult} = git_util:pull(GitRepoPath, GitRepoUser),
+    {ok, GitResult} = git_util:clone(RepoCloneUrl, GitRepoPath, GitRepoUser),
     lager:debug("git result: ~p", [GitResult]),
     {ok, MonitResult} = monit_util:service_action(restart, MonitName),
     lager:debug("monit result: ~p", [MonitResult]),

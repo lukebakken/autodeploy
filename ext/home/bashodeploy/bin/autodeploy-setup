@@ -1,0 +1,22 @@
+#!/usr/bin/env bash
+
+if [[ $(whoami) != 'root' ]]
+then
+  echo "[error] must be started as root user $(id)" 1>&2
+  exit 1
+fi
+
+set -o errexit
+
+for exec_port in $(find /home/bashodeploy/autodeploy -type f -name exec-port)
+do
+  chown -v root:bashodeploy "$exec_port"
+  chmod -v u+s "$exec_port"
+done
+
+set +o errexit
+
+mkdir /var/log/autodeploy
+chown -R bashodeploy:bashodeploy /var/log/autodeploy
+mkdir /var/run/autodeploy
+chown -R bashodeploy:bashodeploy /var/run/autodeploy

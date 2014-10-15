@@ -1,6 +1,6 @@
 -module(git_util).
 
--export([pull/2]).
+-export([clone/3]).
 
 %% as bashodeploy user:
 %% cd /home/zdsms/zendesk-sms
@@ -9,9 +9,9 @@
 %% git reset --hard FETCH_HEAD
 %% git clean -fxd
 
-pull(GitRepoPath, GitRepoUser) ->
+clone(GitCloneUrl, GitRepoPath, GitRepoUser) ->
     {ok, TmpFile} = get_tmp_file(),
-    ok = build_script(TmpFile, GitRepoPath),
+    ok = build_script(TmpFile, GitCloneUrl, GitRepoPath),
     % TODO: add -x when debug/test
     % TODO: how best to globally indicate debug vs production
     {ok, RunResult} = exec:run(["/bin/sh", TmpFile], [sync, stdout, {user, GitRepoUser}]),
@@ -25,15 +25,13 @@ get_tmp_file() ->
     TmpFile = filename:join(TmpDir, lists:concat([TmpName, ".tmp"])),
     {ok, TmpFile}.
 
-build_script(TmpFile, GitRepoPath) ->
+build_script(TmpFile, GitCloneUrl, GitRepoPath) ->
     {ok, GitPath} = application:get_env(autodeploy, git),
     {ok, F} = file:open(TmpFile, [write]),
     ok = file:write(F, "#!/bin/sh\n"),
     ok = file:write(F, "set -o errexit\n"),
     ok = file:write(F, "whoami\n"),
-    ok = io:format(F, "cd ~s~n", [GitRepoPath]),
-    ok = io:format(F, "~s checkout master~n", [GitPath]),
-    ok = io:format(F, "~s fetch basho~n", [GitPath]),
-    ok = io:format(F, "~s reset --hard FETCH_HEAD~n", [GitPath]),
-    ok = io:format(F, "~s clean -fxd~n", [GitPath]),
+    ok = io:format(F, "rm -rf ~s~n", [GitRepoPath]),
+    ok = io:format(F, "~s clone --quiet ~s ~s~n", [GitPath, GitCloneUrl, GitRepoPath]),
+    ok = file:write(F, "exit 0\n"),
     ok = file:close(F).

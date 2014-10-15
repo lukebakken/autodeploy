@@ -19,10 +19,9 @@ do_handle({<<"POST">>, Req}, State) ->
     case cowboy_req:has_body(Req) of
         true ->
             {ok, Body, Req2} = cowboy_req:body(Req),
-            {RepoName, RepoFullName} = process_postreq_body(Body),
-            lager:debug("autodeploy_handler|RepoName: ~p, RepoFullName: ~p",
-                        [RepoName, RepoFullName]),
-            deploy_mgr:deploy_async(RepoName, RepoFullName),
+            RepoData = process_postreq_body(Body),
+            lager:debug("autodeploy_handler|RepoData: ~p", [RepoData]),
+            deploy_mgr:deploy_async(RepoData),
             {ok, ReqRsp} = cowboy_req:reply(204, Req2);
         false ->
             {ok, ReqRsp} = cowboy_req:reply(400, Req)
@@ -43,4 +42,5 @@ process_postreq_body(Body) ->
     {struct, RepoData} = proplists:get_value(<<"repository">>, JsonData),
     RepoName = binary_to_list(proplists:get_value(<<"name">>, RepoData)),
     RepoFullName = binary_to_list(proplists:get_value(<<"full_name">>, RepoData)),
-    {RepoName, RepoFullName}.
+    RepoCloneUrl = binary_to_list(proplists:get_value(<<"ssh_url">>, RepoData)),
+    {RepoName, RepoFullName, RepoCloneUrl}.
