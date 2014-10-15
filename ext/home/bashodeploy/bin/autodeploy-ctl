@@ -19,15 +19,17 @@ LOGFILE=/var/log/autodeploy/autodeploy.log
 
 case $1 in
   start)
+    echo "[info] starting autodeploy $(date)" > $LOGFILE 2>&1
     cd $AUTODEPLOY
-    ./bin/autodeploy_release foreground > $LOGFILE 2>&1 &
+    ./bin/autodeploy_release foreground >> $LOGFILE 2>&1 &
     echo $! > $PIDFILE
     exit 0
     ;;
 
   stop)
+    echo "[info] stopping autodeploy $(date)" >> $LOGFILE 2>&1
     cd $AUTODEPLOY
-    ./bin/autodeploy_release stop > $LOGFILE 2>&1
+    ./bin/autodeploy_release stop >> $LOGFILE 2>&1
     rm -f $PIDFILE
     exit 0
     ;;
