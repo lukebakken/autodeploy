@@ -17,8 +17,9 @@ git_config(RepoName, RepoFullName) ->
         true ->
             GitRepoPath = proplists:get_value(clone_path, RepoProperties),
             GitRepoUser = proplists:get_value(user, RepoProperties),
+            GitRepoGroup = proplists:get_value(group, RepoProperties),
             MonitName = proplists:get_value(monit_name, RepoProperties),
-            {ok, GitRepoPath, GitRepoUser, MonitName};
+            {ok, GitRepoPath, GitRepoUser, GitRepoGroup, MonitName};
         false ->
             {error, "No config for repo with name " ++ RepoName ++
                     " full name " ++ RepoFullName}
