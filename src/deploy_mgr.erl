@@ -44,11 +44,9 @@ do_deploy({RepoName, RepoFullName, RepoCloneUrl}) ->
     % Process:
     % Update git
     % if ok, restart monit
-    {ok, GitRepoPath, GitRepoUser, GitRepoGroup, MonitName} =
-        config_util:git_config(RepoName, RepoFullName),
-    lager:debug("git repo: ~p, user: ~p, group: ~p, monit name: ~p",
-                [GitRepoPath, GitRepoUser, GitRepoGroup, MonitName]),
-    {ok, GitResult} = git_util:clone(RepoCloneUrl, GitRepoPath, GitRepoUser, GitRepoGroup),
+    {ok, MonitName, GitConfig} = config_util:git_config(RepoName, RepoFullName),
+    lager:debug("monit name: ~p, git config ~p", [MonitName, GitConfig]),
+    {ok, GitResult} = git_util:clone(RepoCloneUrl, GitConfig),
     lager:debug("git result: ~p", [GitResult]),
     {ok, MonitResult} = monit_util:service_action(restart, MonitName),
     lager:debug("monit result: ~p", [MonitResult]),
