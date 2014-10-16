@@ -1,1 +1,0 @@
-bashodeploy ALL=(bashodeploy,zdsms:bashodeploy,zdsms) NOPASSWD:ALL
