@@ -8,15 +8,15 @@ fi
 
 set -o errexit
 
-for exec_port in $(find /home/bashodeploy/autodeploy -type f -name exec-port)
+for exec_port in $(find /home/autodeploy/autodeploy -type f -name exec-port)
 do
-  chown -v bashodeploy:bashodeploy "$exec_port"
+  chown -v autodeploy:autodeploy "$exec_port"
   chmod -v 0755 "$exec_port"
 done
 
 set +o errexit
 
 mkdir /var/log/autodeploy
-chown -R bashodeploy:bashodeploy /var/log/autodeploy
+chown -R autodeploy:autodeploy /var/log/autodeploy
 mkdir /var/run/autodeploy
-chown -R bashodeploy:bashodeploy /var/run/autodeploy
+chown -R autodeploy:autodeploy /var/run/autodeploy

@@ -1,13 +1,13 @@
 #!/usr/bin/env bash
 
-if [[ $(whoami) != 'bashodeploy' ]]
+if [[ $(whoami) != 'autodeploy' ]]
 then
-  echo "[error] must be started as bashodeploy user $(id)" 1>&2
+  echo "[error] must be started as autodeploy user $(id)" 1>&2
   exit 1
 fi
 
-export HOME=/home/bashodeploy
-export AUTODEPLOY=/home/bashodeploy/autodeploy
+export HOME=/home/autodeploy
+export AUTODEPLOY=/home/autodeploy/autodeploy
 
 cd $HOME || {
   echo "could not cd to $HOME" 1>&2
@@ -20,7 +20,10 @@ LOGFILE=/var/log/autodeploy/autodeploy.log
 case $1 in
   start)
     echo "[info] starting autodeploy $(date)" > $LOGFILE 2>&1
-    cd $AUTODEPLOY
+    cd $AUTODEPLOY || {
+        echo "could not cd to $AUTODEPLOY" 1>&2
+        exit 1
+    }
     ./bin/autodeploy_release foreground >> $LOGFILE 2>&1 &
     echo $! > $PIDFILE
     exit 0
@@ -28,7 +31,10 @@ case $1 in
 
   stop)
     echo "[info] stopping autodeploy $(date)" >> $LOGFILE 2>&1
-    cd $AUTODEPLOY
+    cd $AUTODEPLOY || {
+        echo "could not cd to $AUTODEPLOY" 1>&2
+        exit 1
+    }
     ./bin/autodeploy_release stop >> $LOGFILE 2>&1
     rm -f $PIDFILE
     exit 0
