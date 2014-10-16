@@ -1,6 +1,6 @@
 -module(config_util).
 
--export([monit_config/0, git_config/2]).
+-export([monit_config/0, git_config/2, secret_token/1]).
 
 monit_config() ->
     {ok, MonitConf} = application:get_env(autodeploy, monit),
@@ -8,6 +8,15 @@ monit_config() ->
     MonitUser = proplists:get_value(user, MonitConf),
     MonitPass = proplists:get_value(pass, MonitConf),
     {MonitUrl, MonitUser, MonitPass}.
+
+secret_token(RepoNameBin) ->
+    {ok, Apps} = application:get_env(autodeploy, apps),
+    RepoProperties = proplists:get_value(binary_to_list(RepoNameBin), Apps),
+    EnvSecretVar = proplists:get_value(env_secret_var, RepoProperties),
+    case os:getenv(EnvSecretVar) of
+        false -> {error, "env variable not defined: " ++ EnvSecretVar};
+        Value -> {ok, Value}
+    end.
 
 git_config(RepoName, RepoFullName) ->
     {ok, Apps} = application:get_env(autodeploy, apps),

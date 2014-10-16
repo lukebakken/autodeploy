@@ -7,31 +7,56 @@ then
 fi
 
 export HOME=/home/autodeploy
-export AUTODEPLOY=/home/autodeploy/autodeploy
+autodeploy=/home/autodeploy/autodeploy
+
+escript="$autodeploy/erts-6.1/bin/escript"
+if [[ ! -x $escript ]]
+then
+  echo "[error] expected executable escript at $escript" 1>&2
+  exit 1
+fi
+
+nodetool="$autodeploy/bin/nodetool"
+if [[ ! -f $nodetool ]]
+then
+  echo "[error] expected nodetool at $nodetool" 1>&2
+  exit 1
+fi
 
 cd $HOME || {
-  echo "could not cd to $HOME" 1>&2
+  echo "[error] could not cd to $HOME" 1>&2
   exit 1
 }
 
-PIDFILE=/var/run/autodeploy/autodeploy.pid
-LOGFILE=/var/log/autodeploy/autodeploy.log
+pidfile=/var/run/autodeploy/autodeploy.pid
+logfile=/var/log/autodeploy/autodeploy.log
+
+# NB: file in this form:
+# export SECRET_zendesk_sms='THESECRET'
+# export SECRET_other_app='THESECRET'
+secrets_file="$HOME/.autodeploy_secrets"
+
+if [[ -s $secrets_file ]]
+then
+    source $secrets_file
+else
+  echo "[error] no secrets file at $secrets_file" 1>&2
+  exit 1
+fi
 
 case $1 in
   start)
-    echo "[info] starting autodeploy $(date)" > $LOGFILE 2>&1
-    su -c "$AUTODEPLOY/bin/autodeploy_release start" autodeploy >> $LOGFILE 2>&1
-    escript="$AUTODEPLOY/erts-6.1/bin/escript"
-    nodetool="$AUTODEPLOY/bin/nodetool"
+    echo "[info] starting autodeploy $(date)" > $logfile 2>&1
+    su -c "$autodeploy/bin/autodeploy_release start" autodeploy >> $logfile 2>&1
     autodeploy_pid=$("$escript" "$nodetool" -name autodeploy@127.0.0.1 -setcookie autodeploy rpcterms os getpid '' | sed -e's/"//g')
-    echo $autodeploy_pid > $PIDFILE
+    echo $autodeploy_pid > $pidfile
     exit 0
     ;;
 
   stop)
-    echo "[info] stopping autodeploy $(date)" >> $LOGFILE 2>&1
-    su -c "$AUTODEPLOY/bin/autodeploy_release stop" autodeploy >> $LOGFILE 2>&1
-    rm -f $PIDFILE
+    echo "[info] stopping autodeploy $(date)" >> $logfile 2>&1
+    su -c "$autodeploy/bin/autodeploy_release stop" autodeploy >> $logfile 2>&1
+    rm -f $pidfile
     exit 0
     ;;
 
