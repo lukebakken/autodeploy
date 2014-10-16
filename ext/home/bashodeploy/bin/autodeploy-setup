@@ -10,8 +10,8 @@ set -o errexit
 
 for exec_port in $(find /home/bashodeploy/autodeploy -type f -name exec-port)
 do
-  chown -v root:root "$exec_port"
-  chmod -v u+s "$exec_port"
+  chown -v bashodeploy:bashodeploy "$exec_port"
+  chmod -v 0755 "$exec_port"
 done
 
 set +o errexit
