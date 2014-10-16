@@ -23,7 +23,7 @@ build_script(TmpFile, GitCloneUrl, GitRepoPath) ->
     ok = io:format(F, "cd ~s~n", [GitRepoPath]),
     ok = file:write(F, "find . -delete\n"),
     ok = file:write(F, "cd ..\n"),
-    ok = io:format(F, "~s clone --verbose --progress ~s > /tmp/clone.out 2>&1~n", [GitPath, GitCloneUrl]),
+    ok = io:format(F, "~s clone --quiet ~s 2>&1~n", [GitPath, GitCloneUrl]),
     ok = file:write(F, "exit $?\n"),
     ok = file:close(F).
 

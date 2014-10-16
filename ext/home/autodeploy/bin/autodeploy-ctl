@@ -1,8 +1,8 @@
 #!/usr/bin/env bash
 
-if [[ $(whoami) != 'autodeploy' ]]
+if [[ $(whoami) != 'root' ]]
 then
-  echo "[error] must be started as autodeploy user $(id)" 1>&2
+  echo "[error] must be started as root user $(id)" 1>&2
   exit 1
 fi
 
@@ -20,22 +20,17 @@ LOGFILE=/var/log/autodeploy/autodeploy.log
 case $1 in
   start)
     echo "[info] starting autodeploy $(date)" > $LOGFILE 2>&1
-    cd $AUTODEPLOY || {
-        echo "could not cd to $AUTODEPLOY" 1>&2
-        exit 1
-    }
-    ./bin/autodeploy_release foreground >> $LOGFILE 2>&1 &
-    echo $! > $PIDFILE
+    su -c "$AUTODEPLOY/bin/autodeploy_release start" autodeploy >> $LOGFILE 2>&1
+    escript="$AUTODEPLOY/erts-6.1/bin/escript"
+    nodetool="$AUTODEPLOY/bin/nodetool"
+    autodeploy_pid=$("$escript" "$nodetool" -name autodeploy@127.0.0.1 -setcookie autodeploy rpcterms os getpid '' | sed -e's/"//g')
+    echo $autodeploy_pid > $PIDFILE
     exit 0
     ;;
 
   stop)
     echo "[info] stopping autodeploy $(date)" >> $LOGFILE 2>&1
-    cd $AUTODEPLOY || {
-        echo "could not cd to $AUTODEPLOY" 1>&2
-        exit 1
-    }
-    ./bin/autodeploy_release stop >> $LOGFILE 2>&1
+    su -c "$AUTODEPLOY/bin/autodeploy_release stop" autodeploy >> $LOGFILE 2>&1
     rm -f $PIDFILE
     exit 0
     ;;
