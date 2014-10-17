@@ -1,15 +1,15 @@
 {application, autodeploy, [
-	{description, "autodeploy"},
-	{vsn, "0.1.0"},
-	{modules, []},
-	{registered, []},
-	{applications, [
-		kernel,
-		stdlib,
+    {description, "autodeploy"},
+    {vsn, "0.1.0"},
+    {modules, []},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib,
         cowboy,
         lager,
         inets
-	]},
-	{mod, {autodeploy_app, []}},
-	{env, []}
+    ]},
+    {mod, {autodeploy_app, []}},
+    {env, []}
 ]}.

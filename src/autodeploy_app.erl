@@ -8,7 +8,7 @@ start(_Type, _Args) ->
     lager:start(),
     Dispatch = cowboy_router:compile([
         {'_', [
-               {"/autodeploy", autodeploy_handler, []},
+               {"/autodeploy/:reponame", autodeploy_handler, []},
                {"/", generic_handler, []}
         ]}
     ]),
