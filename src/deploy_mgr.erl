@@ -27,27 +27,37 @@ init([]) ->
     {ok, initialized}.
 
 handle_call({deploy, RepoData}, _From, State) ->
-    {ok, Reply} = do_deploy(RepoData),
-    {reply, Reply, State};
+    do_deploy({call, State}, RepoData);
 handle_call(stop, _From, State) ->
     {stop, normal, stopped, State}.
 
 handle_cast({deploy, RepoData}, State) ->
-    {ok, _Reply} = do_deploy(RepoData),
-    {noreply, State}.
+    do_deploy({cast, State}, RepoData).
 
 handle_info(_Info, State) -> {noreply, State}.
 terminate(_Reason, _State) -> ok.
 code_change(_OldVsn, State, _Extra) -> {ok, State}.
 
-do_deploy({RepoName, RepoFullName, RepoCloneUrl}) ->
+do_deploy({call, State}, RepoData) ->
+    {ok, Reply} = deploy_it(RepoData),
+    {reply, Reply, State};
+do_deploy({cast, State}, RepoData) ->
+    deploy_it(RepoData),
+    {noreply, State}.
+
+deploy_it({Ref, RepoName, RepoFullName, RepoCloneUrl}) ->
     % Process:
     % Update git
     % if ok, restart monit
-    {ok, MonitName, GitConfig} = config_util:git_config(RepoName, RepoFullName),
-    lager:debug("monit name: ~p, git config ~p", [MonitName, GitConfig]),
-    {ok, GitResult} = git_util:clone(RepoCloneUrl, GitConfig),
-    lager:debug("git result: ~p", [GitResult]),
-    {ok, MonitResult} = monit_util:service_action(restart, MonitName),
-    lager:debug("monit result: ~p", [MonitResult]),
-    {ok, [{git, GitResult}, {monit, MonitResult}]}.
+    case config_util:git_config(Ref, RepoName, RepoFullName) of
+        {ok, MonitName, GitConfig} ->
+            lager:debug("monit name: ~p, git config ~p", [MonitName, GitConfig]),
+            {ok, GitResult} = git_util:clone(RepoCloneUrl, GitConfig),
+            lager:debug("git result: ~p", [GitResult]),
+            {ok, MonitResult} = monit_util:service_action(restart, MonitName),
+            lager:debug("monit result: ~p", [MonitResult]),
+            {ok, [{git, GitResult}, {monit, MonitResult}]};
+        {error, ErrMsg} ->
+            lager:warning("Not deploying: ~p", [ErrMsg]),
+            {ok, ErrMsg}
+    end.

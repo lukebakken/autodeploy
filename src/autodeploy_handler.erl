@@ -45,7 +45,6 @@ process_postreq(RepoNameBin, Req) ->
     end.
 
 validate_secret(XHubHeaderSignatureBin, RepoNameBin, Body) ->
-    %% signature = 'sha1=' + OpenSSL::HMAC.hexdigest(OpenSSL::Digest.new('sha1'), ENV['SECRET_TOKEN'], payload_body)
     %% http://stackoverflow.com/questions/4193543/erlang-calculating-hmac-sha1-example
     {ok, SecretToken} = config_util:secret_token(RepoNameBin),
     <<Mac:160/integer>> = crypto:hmac(sha, SecretToken, Body),
@@ -59,8 +58,9 @@ validate_secret(XHubHeaderSignatureBin, RepoNameBin, Body) ->
 
 process_postreq_body(Body) ->
     {struct, JsonData} = mochijson2:decode(Body),
+    Ref = binary_to_list(proplists:get_value(<<"ref">>, JsonData)),
     {struct, RepoData} = proplists:get_value(<<"repository">>, JsonData),
     RepoName = binary_to_list(proplists:get_value(<<"name">>, RepoData)),
     RepoFullName = binary_to_list(proplists:get_value(<<"full_name">>, RepoData)),
     RepoCloneUrl = binary_to_list(proplists:get_value(<<"ssh_url">>, RepoData)),
-    {RepoName, RepoFullName, RepoCloneUrl}.
+    {Ref, RepoName, RepoFullName, RepoCloneUrl}.

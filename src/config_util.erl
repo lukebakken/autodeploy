@@ -1,6 +1,6 @@
 -module(config_util).
 
--export([monit_config/0, git_config/2, secret_token/1]).
+-export([monit_config/0, git_config/3, secret_token/1]).
 
 monit_config() ->
     {ok, MonitConf} = application:get_env(autodeploy, monit),
@@ -18,11 +18,11 @@ secret_token(RepoNameBin) ->
         Value -> {ok, Value}
     end.
 
-git_config(RepoName, RepoFullName) ->
+git_config(Ref, RepoName, RepoFullName) ->
     {ok, Apps} = application:get_env(autodeploy, apps),
     RepoProperties = proplists:get_value(RepoName, Apps),
-    RepoFullNameCheckFun = fun(E) -> E =:= {full_name, RepoFullName} end,
-    case lists:any(RepoFullNameCheckFun, RepoProperties) of
+    case lists:member({full_name, RepoFullName}, RepoProperties) andalso
+         lists:member({ref, Ref}, RepoProperties) of
         true ->
             GitRepoPath = proplists:get_value(clone_path, RepoProperties),
             GitRepoUser = proplists:get_value(user, RepoProperties),
@@ -30,7 +30,8 @@ git_config(RepoName, RepoFullName) ->
             MonitName = proplists:get_value(monit_name, RepoProperties),
             {ok, MonitName, {GitRepoPath, GitRepoUser, GitRepoGroup}};
         false ->
-            {error, "No config for repo with name " ++ RepoName ++
-                    " full name " ++ RepoFullName}
+            {error, "No config for repo with ref " ++ Ref ++
+                    ", name " ++ RepoName ++
+                    ", full name " ++ RepoFullName}
     end.
 
