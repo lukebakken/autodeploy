@@ -28,7 +28,7 @@ cd $HOME || {
   exit 1
 }
 
-pidfile=/var/run/autodeploy/autodeploy.pid
+pidfile=/var/run/autodeploy.pid
 logfile=/var/log/autodeploy/autodeploy.log
 
 # NB: file in this form:
