@@ -3,13 +3,8 @@
     {vsn, "0.1.0"},
     {modules, []},
     {registered, []},
-    {applications, [
-        kernel,
-        stdlib,
-        cowboy,
-        lager,
-        inets
-    ]},
+    {applications, [kernel, stdlib, cowboy, lager, inets]},
     {mod, {autodeploy_app, []}},
     {env, []}
 ]}.
+
