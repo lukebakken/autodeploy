@@ -1,0 +1,15 @@
+set pidfile /var/run/monit.pid
+set logfile /var/log/monit.log
+set daemon 10
+
+set httpd port 2812 allow localhost allow admin:admin
+
+set mailserver localhost
+set alert lbakken@basho.com
+set mail-format {
+        from: lbakken@basho.com
+}
+
+include /etc/monit.d/zendesk-sms.conf
+include /etc/monit.d/autodeploy.conf
+
