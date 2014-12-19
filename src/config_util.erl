@@ -18,9 +18,11 @@ secret_token(RepoNameBin) ->
         Value -> {ok, Value}
     end.
 
-git_config(Ref, RepoName, RepoFullName) ->
-    {ok, Apps} = application:get_env(autodeploy, apps),
-    RepoProperties = proplists:get_value(RepoName, Apps),
+first_config(Ref, RepoName, RepoFullName, []) ->
+    {error, "No config for repo with ref " ++ Ref ++
+        ", name " ++ RepoName ++
+        ", full name " ++ RepoFullName};
+first_config(Ref, RepoName, RepoFullName, [{RepoName, RepoProperties} | Rest]) ->
     case lists:member({full_name, RepoFullName}, RepoProperties) andalso
          lists:member({ref, Ref}, RepoProperties) of
         true ->
@@ -30,8 +32,14 @@ git_config(Ref, RepoName, RepoFullName) ->
             MonitName = proplists:get_value(monit_name, RepoProperties),
             {ok, MonitName, {GitRepoPath, GitRepoUser, GitRepoGroup}};
         false ->
-            {error, "No config for repo with ref " ++ Ref ++
-                    ", name " ++ RepoName ++
-                    ", full name " ++ RepoFullName}
-    end.
+            first_config(Ref, RepoName, RepoFullName, Rest)
+    end;
+first_config(Ref, RepoName, RepoFullName, [ _WrongRepo | Rest]) ->
+    first_config(Ref, RepoName, RepoFullName, Rest);
+first_config(_,_,_,Config) ->
+    {error, lists:flatten(io_lib:format("Invalid configuration: {apps,~p}",[Config]))}.
+
+git_config(Ref, RepoName, RepoFullName) ->
+    {ok, Apps} = application:get_env(autodeploy, apps),
+    first_config(Ref, RepoName, RepoFullName, Apps).
 
