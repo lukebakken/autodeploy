@@ -17,11 +17,11 @@ handle(Req, State=#state{}) ->
 do_handle({<<"POST">>, Req}, State) ->
     {RepoNameBin, Req2} = cowboy_req:binding(reponame, Req),
     lager:debug("POST repo ~p request: ~p", [RepoNameBin, Req2]),
-    case cowboy_req:has_body(Req2) of
+    {ok, ReqRsp} = case cowboy_req:has_body(Req2) of
         true ->
-            {ok, ReqRsp} = process_postreq(RepoNameBin, Req2);
+            process_postreq(RepoNameBin, Req2);
         false ->
-            {ok, ReqRsp} = cowboy_req:reply(400, Req2)
+            cowboy_req:reply(400, Req2)
     end,
     {ok, ReqRsp, State};
 do_handle({_, Req}, State) ->
