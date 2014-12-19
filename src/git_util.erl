@@ -3,8 +3,10 @@
 -export([clone/2]).
 
 clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup}) ->
+    clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup,[]}).
+clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup, GitArgs}) ->
     {ok, TmpFile} = file_util:get_tmp_file(),
-    ok = build_script(TmpFile, GitCloneUrl, GitRepoPath),
+    ok = build_script(TmpFile, GitCloneUrl, GitRepoPath, GitArgs),
     % TODO: how best to globally indicate debug vs production
     GitCmd = ["/usr/bin/sudo", "-u", GitRepoUser, "-g", GitRepoGroup, "/bin/sh", TmpFile],
     lager:debug("git cmd: ~p", [GitCmd]),
@@ -23,7 +25,7 @@ build_script(TmpFile, GitCloneUrl, GitRepoPath) ->
     ok = io:format(F, "cd ~s~n", [GitRepoPath]),
     ok = file:write(F, "find . -delete\n"),
     ok = file:write(F, "cd ..\n"),
-    ok = io:format(F, "~s clone --quiet ~s 2>&1~n", [GitPath, GitCloneUrl]),
+    ok = io:format(F, "~s clone --quiet ~s ~s ~s 2>&1~n", [GitPath, GitArgs, GitCloneUrl, GitRepoPath]),
     ok = file:write(F, "exit $?\n"),
     ok = file:close(F).
 
