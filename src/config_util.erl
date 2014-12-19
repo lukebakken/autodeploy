@@ -29,8 +29,9 @@ first_config(Ref, RepoName, RepoFullName, [{RepoName, RepoProperties} | Rest]) -
             GitRepoPath = proplists:get_value(clone_path, RepoProperties),
             GitRepoUser = proplists:get_value(user, RepoProperties),
             GitRepoGroup = proplists:get_value(group, RepoProperties),
+            GitArgs = proplists:get_value(gitargs, RepoProperties,[])
             MonitName = proplists:get_value(monit_name, RepoProperties),
-            {ok, MonitName, {GitRepoPath, GitRepoUser, GitRepoGroup}};
+            {ok, MonitName, {GitRepoPath, GitRepoUser, GitRepoGroup, GitArgs}};
         false ->
             first_config(Ref, RepoName, RepoFullName, Rest)
     end;
