@@ -9,10 +9,18 @@ fi
 export HOME=/home/autodeploy
 autodeploy=/home/autodeploy/autodeploy
 
-escript="$autodeploy/erts-6.1/bin/escript"
+escript=/dev/null
+for escript in $autodeploy/erts-*/bin/escript
+do
+  if [[ -x $escript ]]
+  then
+    break
+  fi
+done
+
 if [[ ! -x $escript ]]
 then
-  echo "[error] expected executable escript at $escript" 1>&2
+  echo "[error] expected executable escript at $autodeploy/erts-*/bin/escript" 1>&2
   exit 1
 fi
 
