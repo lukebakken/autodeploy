@@ -3,7 +3,7 @@
 -export([clone/2]).
 
 clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup}) ->
-    clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup,[]}).
+    clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup,[]});
 clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup, GitArgs}) ->
     {ok, TmpFile} = file_util:get_tmp_file(),
     ok = build_script(TmpFile, GitCloneUrl, GitRepoPath, GitArgs),
@@ -15,7 +15,7 @@ clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup, GitArgs}) ->
     ok = file:delete(TmpFile),
     {ok, RunResult}.
 
-build_script(TmpFile, GitCloneUrl, GitRepoPath) ->
+build_script(TmpFile, GitCloneUrl, GitRepoPath, GitArgs) ->
     {ok, GitPath} = application:get_env(autodeploy, git),
     {ok, F} = file:open(TmpFile, [write]),
     ok = file:write(F, "#!/bin/sh\n"),
