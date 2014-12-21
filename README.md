@@ -11,7 +11,7 @@ sudo su - autodeploy
 pushd autodeploy-src
 git clean -fxd && git pull --rebase
 source /home/erlang/installs/17.4/activate
-make all
+make release
 popd
 mv autodeploy autodeploy-bak
 mkdir autodeploy
