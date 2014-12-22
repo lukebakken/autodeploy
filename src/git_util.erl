@@ -12,7 +12,7 @@ clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup, GitArgs}) ->
     lager:debug("git cmd: ~p", [GitCmd]),
     RunResult = os:cmd(string:join(GitCmd, " ")),
     lager:debug("git result: ~p", [RunResult]),
-    ok = file:delete(TmpFile),
+    misc_util:file_delete(TmpFile),
     {ok, RunResult}.
 
 build_script(TmpFile, GitCloneUrl, GitRepoPath, GitArgs) ->
@@ -23,13 +23,13 @@ build_script(TmpFile, GitCloneUrl, GitRepoPath, GitArgs) ->
     ok = io:format(F, "mkdir -p ~s~n", [GitRepoPath]),
     ok = file:write(F, "set -o errexit\n"),
     ok = io:format(F, "cd ~s~n", [GitRepoPath]),
-    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ -x ./autodeploy.sh ] && ./autodeploy.sh pre"),
-    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ ! -x ./autodeploy.sh ] && /bin/sh ./autodeploy.sh pre"),
+    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ -x ./autodeploy.sh ] && ./autodeploy.sh pre\n"),
+    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ ! -x ./autodeploy.sh ] && /bin/sh ./autodeploy.sh pre\n"),
     ok = file:write(F, "find . -delete\n"),
     ok = file:write(F, "cd ..\n"),
     ok = io:format(F, "~s clone --quiet ~s ~s ~s 2>&1~n", [GitPath, GitArgs, GitCloneUrl, GitRepoPath]),
     ok = io:format(F, "cd ~s~n", [GitRepoPath]),
-    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ -x ./autodeploy.sh ] && ./autodeploy.sh pre"),
-    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ ! -x ./autodeploy.sh ] && /bin/sh ./autodeploy.sh pre"),
+    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ -x ./autodeploy.sh ] && ./autodeploy.sh post\n"),
+    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ ! -x ./autodeploy.sh ] && /bin/sh ./autodeploy.sh post\n"),
     ok = file:close(F).
 
