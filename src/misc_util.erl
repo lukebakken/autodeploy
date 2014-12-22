@@ -5,6 +5,6 @@
 file_delete(_File) -> ok.
 -else.
 file_delete(File) ->
-    ok = file:delete(TmpFile).
+    ok = file:delete(File).
 -endif.
 
