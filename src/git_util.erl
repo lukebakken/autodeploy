@@ -23,13 +23,13 @@ build_script(TmpFile, GitCloneUrl, GitRepoPath, GitArgs) ->
     ok = io:format(F, "mkdir -p ~s~n", [GitRepoPath]),
     ok = file:write(F, "set -o errexit\n"),
     ok = io:format(F, "cd ~s~n", [GitRepoPath]),
-    ok = io:format(F, "[ -f ./autodeploy.sh ] && [ -x ./autodeploy.sh ] && ./autodeploy.sh pre", [GitRepoPath]),
-    ok = io:format(F, "[ -f ./autodeploy.sh ] && [ ! -x ./autodeploy.sh ] && /bin/sh ./autodeploy.sh pre", [GitRepoPath]),
+    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ -x ./autodeploy.sh ] && ./autodeploy.sh pre"),
+    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ ! -x ./autodeploy.sh ] && /bin/sh ./autodeploy.sh pre"),
     ok = file:write(F, "find . -delete\n"),
     ok = file:write(F, "cd ..\n"),
     ok = io:format(F, "~s clone --quiet ~s ~s ~s 2>&1~n", [GitPath, GitArgs, GitCloneUrl, GitRepoPath]),
     ok = io:format(F, "cd ~s~n", [GitRepoPath]),
-    ok = io:format(F, "[ -f ./autodeploy.sh ] && [ -x ./autodeploy.sh ] && ./autodeploy.sh post", [GitRepoPath]),
-    ok = io:format(F, "[ -f ./autodeploy.sh ] && [ ! -x ./autodeploy.sh ] && /bin/sh ./autodeploy.sh post", [GitRepoPath]),
+    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ -x ./autodeploy.sh ] && ./autodeploy.sh pre"),
+    ok = file:write(F, "[ -f ./autodeploy.sh ] && [ ! -x ./autodeploy.sh ] && /bin/sh ./autodeploy.sh pre"),
     ok = file:close(F).
 
