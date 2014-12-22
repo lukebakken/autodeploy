@@ -34,15 +34,26 @@ terminate(_Reason, _Req, _State) ->
 process_postreq(RepoNameBin, Req) ->
     {ok, Body, Req2} = cowboy_req:body(Req),
     {XHubHeaderSignatureBin, Req3} = cowboy_req:header(<<"x-hub-signature">>, Req2),
-    case validate_secret(XHubHeaderSignatureBin, RepoNameBin, Body) of
-        ok ->
-            RepoData = process_postreq_body(Body),
-            lager:debug("autodeploy_handler|RepoData: ~p", [RepoData]),
-            deploy_mgr:deploy_async(RepoData),
-            {ok, _ReqRsp} = cowboy_req:reply(204, Req3);
-        error ->
-            {ok, _ReqRsp} = cowboy_req:reply(500, [{<<"content-type">>, <<"text/plain">>}], <<"invalid signature token">>, Req3)
-    end.
+    ValidationResult = validate_secret(XHubHeaderSignatureBin, RepoNameBin, Body),
+    process_postreq_step2(ValidationResult, Req3).
+
+process_postreq_step2({ok, Body}, Req) ->
+    {XHubEventBin, Req2} = cowboy_req:header(<<"x-github-event">>, Req),
+    ok = lager:debug("x-github-event header: ~p", [XHubEventBin]),
+    process_postreq_step3(XHubEventBin, Body, Req2);
+process_postreq_step2(error, Req) ->
+    cowboy_req:reply(500, [{<<"content-type">>, <<"text/plain">>}], <<"invalid signature token">>, Req).
+
+process_postreq_step3(<<"ping">>, _Body, Req) ->
+    cowboy_req:reply(200, [{<<"content-type">>, <<"text/plain">>}], <<"pong">>, Req);
+process_postreq_step3(<<"push">>, Body, Req) ->
+    RepoData = process_postreq_body(Body),
+    lager:debug("autodeploy_handler|RepoData: ~p", [RepoData]),
+    deploy_mgr:deploy_async(RepoData),
+    cowboy_req:reply(204, Req);
+process_postreq_step3(UnknownEvent, _Body, Req) ->
+    ok = lager:error("unknown github event: ~p", [UnknownEvent]),
+    cowboy_req:reply(500, [{<<"content-type">>, <<"text/plain">>}], <<"unknown github event">>, Req).
 
 validate_secret(XHubHeaderSignatureBin, RepoNameBin, Body) ->
     %% http://stackoverflow.com/questions/4193543/erlang-calculating-hmac-sha1-example
@@ -52,7 +63,7 @@ validate_secret(XHubHeaderSignatureBin, RepoNameBin, Body) ->
     XHubHeaderSignature = binary_to_list(XHubHeaderSignatureBin),
     lager:debug("validate_secret header: ~p calculated: ~p", [XHubHeaderSignature, CalculatedSignature]),
     case string:equal(XHubHeaderSignature, CalculatedSignature) of
-        true -> ok;
+        true -> {ok, Body};
         false -> error
     end.
 
