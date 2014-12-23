@@ -6,11 +6,80 @@ then
   exit 1
 fi
 
-export HOME=/home/autodeploy
-autodeploy=/home/autodeploy/autodeploy
+appname=autodeploy
+appuser=autodeploy
+appgroup=autodeploy
+
+export HOME="/home/$appname"
+apprel="$HOME/$appname/_rel/${appname}_release"
+erl_pipedir="/tmp/erl_pipes/${appname}_release"
+
+mkdir -p "$erl_pipedir"
+chown -R $appuser:$appgroup "$erl_pipedir"
+
+function now
+{
+  date '+%Y-%m-%d %H:%M:%S'
+}
+
+function pwarn
+{
+  echo "$(now) [warning]: $@" 1>&2
+}
+
+function perr
+{
+  echo "$(now) [error]: $@" 1>&2
+}
+
+function pinfo
+{
+  echo "$(now) [info]: $@"
+}
+
+function errexit
+{
+  perr "$@"
+  exit 1
+}
+
+function ensure_directories
+{
+  for dir in "$@"
+  do
+    if [[ ! -d $dir ]]
+    then
+      errexit "missing directory $dir"
+    fi
+  done
+}
+
+function ensure_files
+{
+  for file in "$@"
+  do
+    if [[ ! -f $file ]]
+    then
+      errexit "expected file at $file"
+    fi
+  done
+}
+
+function ensure_executables
+{
+  for exe in "$@"
+  do
+    if [[ ! -x $exe ]]
+    then
+      errexit "expected executable at $exe"
+    fi
+  done
+}
+
+ensure_directories "$HOME" "$apprel"
 
 escript=/dev/null
-for escript in $autodeploy/erts-*/bin/escript
+for escript in $apprel/erts-*/bin/escript
 do
   if [[ -x $escript ]]
   then
@@ -18,58 +87,47 @@ do
   fi
 done
 
-if [[ ! -x $escript ]]
-then
-  echo "[error] expected executable escript at $autodeploy/erts-*/bin/escript" 1>&2
-  exit 1
-fi
+nodetool="$apprel/bin/nodetool"
+appctl="$apprel/bin/${appname}_release"
 
-nodetool="$autodeploy/bin/nodetool"
-if [[ ! -f $nodetool ]]
-then
-  echo "[error] expected nodetool at $nodetool" 1>&2
-  exit 1
-fi
+ensure_files "$nodetool"
+ensure_executables "$escript" "$appctl"
 
-cd $HOME || {
-  echo "[error] could not cd to $HOME" 1>&2
-  exit 1
-}
+cd $HOME || errexit "could not cd to $HOME"
 
-pidfile=/var/run/autodeploy.pid
-logfile=/var/log/autodeploy/autodeploy.log
+pidfile=/var/run/$appname.pid
+logfile=/var/log/$appname/$appname.log
 
 # NB: file in this form:
 # export SECRET_zendesk_sms='THESECRET'
 # export SECRET_other_app='THESECRET'
-secrets_file="$HOME/.autodeploy_secrets"
+secrets_file="$HOME/.${appname}_secrets"
 
 if [[ -s $secrets_file ]]
 then
     source $secrets_file
 else
-  echo "[error] no secrets file at $secrets_file" 1>&2
-  exit 1
+  echo "[info] no secrets file at $secrets_file" 1>&2
 fi
 
 case $1 in
   start)
-    echo "[info] starting autodeploy $(date)" > $logfile 2>&1
-    su -c "$autodeploy/bin/autodeploy_release start" autodeploy >> $logfile 2>&1
-    autodeploy_pid=$("$escript" "$nodetool" -name autodeploy@127.0.0.1 -setcookie autodeploy rpcterms os getpid '' | sed -e's/"//g')
-    echo $autodeploy_pid > $pidfile
+    echo "[info] starting $appname $(date)" > $logfile 2>&1
+    su -c "$appctl start" $appuser >> $logfile 2>&1
+    app_pid=$("$escript" "$nodetool" -name $appname@127.0.0.1 -setcookie $appname rpcterms os getpid '' | sed -e's/"//g')
+    echo $app_pid > $pidfile
     exit 0
     ;;
 
   stop)
-    echo "[info] stopping autodeploy $(date)" >> $logfile 2>&1
-    su -c "$autodeploy/bin/autodeploy_release stop" autodeploy >> $logfile 2>&1
+    echo "[info] stopping $appname $(date)" >> $logfile 2>&1
+    su -c "$appctl stop" $appuser >> $logfile 2>&1
     rm -f $pidfile
     exit 0
     ;;
 
   *)
-    echo "Usage: autodeploy-ctl {start|stop}"
+    echo "Usage: $appname-ctl {start|stop}"
     exit 1
     ;;
 esac
