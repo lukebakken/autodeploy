@@ -72,9 +72,16 @@ validate_secret(SecretToken, XHubHeaderSignatureBin, _RepoNameBin, Body) ->
 
 process_postreq_body(Body) ->
     {struct, JsonData} = mochijson2:decode(Body),
-    Ref = binary_to_list(proplists:get_value(<<"ref">>, JsonData)),
+    Ref = proplists:get_value(<<"ref">>, JsonData),
     {struct, RepoData} = proplists:get_value(<<"repository">>, JsonData),
-    RepoName = binary_to_list(proplists:get_value(<<"name">>, RepoData)),
-    RepoFullName = binary_to_list(proplists:get_value(<<"full_name">>, RepoData)),
-    RepoCloneUrl = binary_to_list(proplists:get_value(<<"ssh_url">>, RepoData)),
-    {Ref, RepoName, RepoFullName, RepoCloneUrl}.
+    RepoName = proplists:get_value(<<"name">>, RepoData),
+    RepoFullName = proplists:get_value(<<"full_name">>, RepoData),
+    RepoGitCloneUrl = proplists:get_value(<<"git_url">>, RepoData),
+    RepoSSHCloneUrl = proplists:get_value(<<"ssh_url">>, RepoData),
+    RepoHTTPSCloneUrl = proplists:get_value(<<"clone_url">>, RepoData),
+    RepoCloneList = [
+        {git_url, RepoGitCloneUrl},
+        {ssh_url, RepoSSHCloneUrl},
+        {clone_url, RepoHTTPSCloneUrl}
+    ],
+    {Ref, RepoName, RepoFullName, RepoCloneList}.

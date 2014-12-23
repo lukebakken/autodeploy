@@ -2,9 +2,11 @@
 
 -export([clone/2]).
 
-clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup}) ->
-    clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup,[]});
-clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup, GitArgs}) ->
+clone(RepoCloneList, {GitRepoPath, GitRepoUser, GitRepoGroup}) ->
+    clone(RepoCloneList, {GitRepoPath, GitRepoUser, GitRepoGroup, [], ssh_url});
+clone(RepoCloneList, {GitRepoPath, GitRepoUser, GitRepoGroup, GitArgs, GitCloneFrom}) ->
+    GitCloneUrl = proplists:get_value(GitCloneFrom, RepoCloneList),
+    ok = lager:debug("git clone url: ~p", [GitCloneUrl]),
     {ok, TmpFile} = file_util:get_tmp_file(),
     ok = build_script(TmpFile, GitCloneUrl, GitRepoPath, GitArgs),
     % TODO: how best to globally indicate debug vs production

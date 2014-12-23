@@ -45,14 +45,14 @@ do_deploy({cast, State}, RepoData) ->
     deploy_it(RepoData),
     {noreply, State}.
 
-deploy_it({Ref, RepoName, RepoFullName, RepoCloneUrl}) ->
+deploy_it({Ref, RepoName, RepoFullName, RepoCloneList}) ->
     % Process:
     % Update git
     % if ok, restart monit
     case config_util:git_config(Ref, RepoName, RepoFullName) of
         {ok, MonitName, GitConfig} ->
             lager:debug("monit name: ~p, git config ~p", [MonitName, GitConfig]),
-            {ok, GitResult} = git_util:clone(RepoCloneUrl, GitConfig),
+            {ok, GitResult} = git_util:clone(RepoCloneList, GitConfig),
             {ok, MonitResult} = monit_util:service_action(restart, MonitName),
             {ok, [{git, GitResult}, {monit, MonitResult}]};
         {error, ErrMsg} ->
