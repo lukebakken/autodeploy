@@ -4,7 +4,12 @@
 -export([monit_config/0, git_config/3, secret_token/1]).
 
 monit_config() ->
-    {ok, MonitConf} = application:get_env(autodeploy, monit),
+    MonitConf = application:get_env(autodeploy, monit, []),
+    process_monit_config(MonitConf).
+
+process_monit_config([]) ->
+    undefined;
+process_monit_config(MonitConf) ->
     MonitUrl = proplists:get_value(url, MonitConf),
     MonitUser = proplists:get_value(user, MonitConf),
     MonitPass = proplists:get_value(pass, MonitConf),
