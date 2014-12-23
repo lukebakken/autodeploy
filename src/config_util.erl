@@ -1,4 +1,5 @@
 -module(config_util).
+-include("spec_types.hrl").
 
 -export([monit_config/0, git_config/3, secret_token/1]).
 
@@ -9,14 +10,14 @@ monit_config() ->
     MonitPass = proplists:get_value(pass, MonitConf),
     {MonitUrl, MonitUser, MonitPass}.
 
+-spec secret_token(RepoNameBin) -> RV when
+      RepoNameBin :: repo_name(),
+      RV :: false | string().
 secret_token(RepoNameBin) ->
     {ok, Apps} = application:get_env(autodeploy, apps),
     RepoProperties = proplists:get_value(binary_to_list(RepoNameBin), Apps),
     EnvSecretVar = proplists:get_value(env_secret_var, RepoProperties),
-    case os:getenv(EnvSecretVar) of
-        false -> {error, "env variable not defined: " ++ EnvSecretVar};
-        Value -> {ok, Value}
-    end.
+    os:getenv(EnvSecretVar).
 
 first_config(Ref, RepoName, RepoFullName, []) ->
     {error, "No config for repo with ref " ++ Ref ++

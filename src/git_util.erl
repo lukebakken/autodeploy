@@ -9,9 +9,9 @@ clone(GitCloneUrl, {GitRepoPath, GitRepoUser, GitRepoGroup, GitArgs}) ->
     ok = build_script(TmpFile, GitCloneUrl, GitRepoPath, GitArgs),
     % TODO: how best to globally indicate debug vs production
     GitCmd = ["/usr/bin/sudo", "-u", GitRepoUser, "-g", GitRepoGroup, "/bin/sh", TmpFile],
-    lager:debug("git cmd: ~p", [GitCmd]),
-    RunResult = lists:flatten(os:cmd(string:join(GitCmd, " "))),
-    lager:debug("git result: ~p", [RunResult]),
+    ok = lager:debug("git cmd: ~p", [GitCmd]),
+    RunResult = os:cmd(string:join(GitCmd, " ")),
+    ok = lager:debug("git output: ~s", [RunResult]),
     misc_util:file_delete(TmpFile),
     {ok, RunResult}.
 

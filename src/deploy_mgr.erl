@@ -53,11 +53,9 @@ deploy_it({Ref, RepoName, RepoFullName, RepoCloneUrl}) ->
         {ok, MonitName, GitConfig} ->
             lager:debug("monit name: ~p, git config ~p", [MonitName, GitConfig]),
             {ok, GitResult} = git_util:clone(RepoCloneUrl, GitConfig),
-            lager:debug("git result: ~p", [GitResult]),
             {ok, MonitResult} = monit_util:service_action(restart, MonitName),
-            lager:debug("monit result: ~p", [MonitResult]),
             {ok, [{git, GitResult}, {monit, MonitResult}]};
         {error, ErrMsg} ->
-            lager:warning("Not deploying: ~p", [ErrMsg]),
+            lager:warning("Not deploying: ~s", [ErrMsg]),
             {ok, ErrMsg}
     end.

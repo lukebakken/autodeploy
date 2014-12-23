@@ -1,0 +1,1 @@
+-type repo_name() :: binary().

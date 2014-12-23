@@ -16,7 +16,7 @@ handle(Req, State=#state{}) ->
 
 do_handle({<<"POST">>, Req}, State) ->
     {RepoNameBin, Req2} = cowboy_req:binding(reponame, Req),
-    lager:debug("POST repo ~p request: ~p", [RepoNameBin, Req2]),
+    ok = lager:debug("POST repo ~p request: ~p", [RepoNameBin, Req2]),
     {ok, ReqRsp} = case cowboy_req:has_body(Req2) of
         true ->
             process_postreq(RepoNameBin, Req2);
@@ -34,7 +34,8 @@ terminate(_Reason, _Req, _State) ->
 process_postreq(RepoNameBin, Req) ->
     {ok, Body, Req2} = cowboy_req:body(Req),
     {XHubHeaderSignatureBin, Req3} = cowboy_req:header(<<"x-hub-signature">>, Req2),
-    ValidationResult = validate_secret(XHubHeaderSignatureBin, RepoNameBin, Body),
+    MaybeSecretToken = config_util:secret_token(RepoNameBin),
+    ValidationResult = validate_secret(MaybeSecretToken, XHubHeaderSignatureBin, RepoNameBin, Body),
     process_postreq_step2(ValidationResult, Req3).
 
 process_postreq_step2({ok, Body}, Req) ->
@@ -48,20 +49,22 @@ process_postreq_step3(<<"ping">>, _Body, Req) ->
     cowboy_req:reply(200, [{<<"content-type">>, <<"text/plain">>}], <<"pong">>, Req);
 process_postreq_step3(<<"push">>, Body, Req) ->
     RepoData = process_postreq_body(Body),
-    lager:debug("autodeploy_handler|RepoData: ~p", [RepoData]),
+    ok = lager:debug("autodeploy_handler|RepoData: ~p", [RepoData]),
     deploy_mgr:deploy_async(RepoData),
     cowboy_req:reply(204, Req);
 process_postreq_step3(UnknownEvent, _Body, Req) ->
     ok = lager:error("unknown github event: ~p", [UnknownEvent]),
     cowboy_req:reply(500, [{<<"content-type">>, <<"text/plain">>}], <<"unknown github event">>, Req).
 
-validate_secret(XHubHeaderSignatureBin, RepoNameBin, Body) ->
+validate_secret(false, _XHubHeaderSignatureBin, RepoNameBin, Body) ->
+    ok = lager:warning("no secret token for git repo ~s", [RepoNameBin]),
+    {ok, Body};
+validate_secret(SecretToken, XHubHeaderSignatureBin, _RepoNameBin, Body) ->
     %% http://stackoverflow.com/questions/4193543/erlang-calculating-hmac-sha1-example
-    {ok, SecretToken} = config_util:secret_token(RepoNameBin),
     <<Mac:160/integer>> = crypto:hmac(sha, SecretToken, Body),
     CalculatedSignature = "sha1=" ++ lists:flatten(io_lib:format("~40.16.0b", [Mac])),
     XHubHeaderSignature = binary_to_list(XHubHeaderSignatureBin),
-    lager:debug("validate_secret header: ~p calculated: ~p", [XHubHeaderSignature, CalculatedSignature]),
+    ok = lager:debug("validate_secret header: ~p calculated: ~p", [XHubHeaderSignature, CalculatedSignature]),
     case string:equal(XHubHeaderSignature, CalculatedSignature) of
         true -> {ok, Body};
         false -> error

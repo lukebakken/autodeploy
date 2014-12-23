@@ -22,4 +22,11 @@ do_service_action(ServiceName, Action) ->
     Body = string:concat("action=", Action),
     HTTPOptions = [],
     Options = [],
-    {ok, _R} = httpc:request(Method, {URL, Header, Type, Body}, HTTPOptions, Options).
+    case httpc:request(Method, {URL, Header, Type, Body}, HTTPOptions, Options) of
+        {ok, ResultMsg} ->
+            ok = lager:debug("httpc result message: ~p", [ResultMsg]),
+            {ok, ResultMsg};
+        {Err, ErrMsg} ->
+            ok = lager:error("httpc error: ~p message: ~p", [Err, ErrMsg]),
+            {ok, ErrMsg}
+    end.

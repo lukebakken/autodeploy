@@ -10,6 +10,9 @@ include erlang.mk
 ERLC_OPTS += +'{parse_transform, lager_transform}'
 TEST_ERLC_OPTS += +'{parse_transform, lager_transform}'
 
+PLT_APPS = inets ssl xmerl
+DIALYZER_DIRS = ebin
+
 .PHONY: debug release
 
 debug: ERLC_OPTS += -DDEBUG=1
