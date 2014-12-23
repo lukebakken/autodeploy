@@ -1,1 +1,0 @@
-autodeploy ALL=(autodeploy,zdsms:autodeploy,zdsms) NOPASSWD:ALL
