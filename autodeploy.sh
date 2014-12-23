@@ -1,14 +1,14 @@
 #!/usr/bin/env bash
 rel_output_dir='../autodeploy'
-backup_dir='../cfgbak'
 sys_config="$rel_output_dir/autodeploy_release/releases/1/sys.config"
-mkdir "$backup_dir"
 set -o errexit
 case "$1" in
   'pre')
     now="$(date '+%Y%m%d_%H%M%S')"
     if [[ -f $sys_config ]]
     then
+      backup_dir='../cfgbak'
+      [[ ! -d $backup_dir ]] && mkdir "$backup_dir"
       mv -vf "$sys_config" "$backup_dir/sys-config-${now}.bak"
     fi
     ;;
