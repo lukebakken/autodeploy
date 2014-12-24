@@ -6,6 +6,12 @@ then
   exit 1
 fi
 
+# ensure that /tmp/erl_pipes is set up correctly
+erl_pipedir='/tmp/erl_pipes/'
+mkdir -p "$erl_pipedir"
+chown root:root "$erl_pipedir"
+chmod 1777 "$erl_pipedir"
+
 appname=autodeploy
 appuser=autodeploy
 appgroup=autodeploy
@@ -13,10 +19,6 @@ appgroup=autodeploy
 export HOME="/home/$appname"
 # NB: autodeploy.sh sets RELX_OUTPUT_DIR to /home/autodeploy/autodeploy
 apprel="$HOME/$appname/${appname}_release"
-erl_pipedir="/tmp/erl_pipes/${appname}_release"
-
-mkdir -p "$erl_pipedir"
-chown -R $appuser:$appgroup "$erl_pipedir"
 
 function now
 {
