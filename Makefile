@@ -5,6 +5,9 @@ ifeq ($(shell findmnt -no FSTYPE /tmp), tmpfs)
 RELX_OUTPUT_DIR ?= /tmp/autodeploy
 endif
 
+# TODO: compare with URL in erlang.mk
+RELX_URL := https://github.com/erlware/relx/releases/download/v1.1.0/relx
+
 include erlang.mk
 
 ERLC_OPTS += +'{parse_transform, lager_transform}'
