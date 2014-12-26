@@ -117,7 +117,7 @@ case $1 in
   start)
     pinfo "starting $appname $(date)" > $logfile 2>&1
     su -c "$appctl start" $appuser >> $logfile 2>&1
-    app_pid=$("$escript" "$nodetool" -name $appname@127.0.0.1 -setcookie $appname rpcterms os getpid | sed -e's/"//g')
+    app_pid="$($appctl pid)"
     echo $app_pid > $pidfile
     exit 0
     ;;
