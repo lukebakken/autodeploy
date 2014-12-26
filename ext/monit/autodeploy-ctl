@@ -117,8 +117,7 @@ case $1 in
   start)
     pinfo "starting $appname $(date)" > $logfile 2>&1
     su -c "$appctl start" $appuser >> $logfile 2>&1
-    app_pid="$($appctl pid)"
-    echo $app_pid > $pidfile
+    $appctl pid > $pidfile
     exit 0
     ;;
 
